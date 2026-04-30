@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <title>ALE Engine</title>
+    <meta content="ALE Engine homepage." name="description"/>
+    <link href="assets/icons/favicon-32.png?v=1" rel="icon" sizes="32x32" type="image/png"/>
+    <link href="css/site.css" rel="stylesheet"/>
+</head>
+<body>
+    <header class="site-header" id="mainHeader">
+        <div class="shell header-shell">
+            <a aria-label="ALE Engine Home" class="brand" href="./">
+                <img alt="ALE Engine Logo" src="assets/images/engine-branding/icon.png"/>
+                <span>ALE Engine</span>
+            </a>
+
+            <input aria-hidden="true" class="nav-toggle" id="navToggle" type="checkbox"/>
+            <label aria-label="Toggle navigation" class="nav-burger" for="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
+
+            <nav class="main-nav" id="mainNav">
+                <ul class="nav-left">
+                    <li><a aria-current="page" href="./">Home</a></li>
+                    <li><a href="downloads/">Downloads</a></li>
+                    <li><a href="mods/">Mods</a></li>
+                    <li><a href="https://discord.gg/NP4U9CUrsH" target="_blank" rel="noopener">Community</a></li>
+                    <li><a href="wiki/">Docs</a></li>
+                    <li><a href="#">Blogs</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-backdrop"></div>
+            <div class="shell hero-shell">
+                <div class="hero-copy">
+                    <h1>ALE Engine</h1>
+                    <p class="lead">ALE Engine is a Friday Night Funkin' engine focused on softcoding, customization, and feature-rich modding through scripts and JSON, built from scratch with HaxeFlixel.</p>
+                    <div class="hero-download-grid" id="heroDownloadGrid">
+                        <a class="downloadCard" data-os="windows" href="https://nightly.link/ALE-Psych-Crew/ALE-Psych/workflows/builds.yaml/main/Windows%20Build.zip" target="_blank" rel="noopener noreferrer" aria-label="Download Windows 64-bit build">
+                            <img class="dl-icon" src="assets/svg/index/win64.svg" alt="" width="24" height="24"/>
+                            <div class="dl-body">
+                                <span class="dl-title">Windows</span>
+                                <span class="dl-sub">ZIP · Win x64</span>
+                            </div>
+                            <span class="dl-cta">Download</span>
+                        </a>
+                        <a class="downloadCard" data-os="macos" href="https://nightly.link/ALE-Psych-Crew/ALE-Psych/workflows/builds.yaml/main/MacOS%20Build.zip" target="_blank" rel="noopener noreferrer" aria-label="Download macOS build">
+                            <img class="dl-icon" src="assets/svg/index/macos.svg" alt="" width="24" height="24"/>
+                            <div class="dl-body">
+                                <span class="dl-title">macOS</span>
+                                <span class="dl-sub">ZIP · Universal/ARM</span>
+                            </div>
+                            <span class="dl-cta">Download</span>
+                        </a>
+                        <a class="downloadCard" data-os="linux" href="https://nightly.link/ALE-Psych-Crew/ALE-Psych/workflows/builds.yaml/main/Linux%20Build.zip" target="_blank" rel="noopener noreferrer" aria-label="Download Linux build">
+                            <img class="dl-icon" src="assets/svg/index/linux.svg" alt="" width="24" height="24"/>
+                            <div class="dl-body">
+                                <span class="dl-title">Linux</span>
+                                <span class="dl-sub">ZIP</span>
+                            </div>
+                            <span class="dl-cta">Download</span>
+                        </a>
+                        <a class="downloadCard" data-os="other" href="downloads/" aria-label="View other downloads">
+                            <img class="dl-icon" src="assets/svg/index/otherdevice.svg" alt="" width="24" height="24"/>
+                            <div class="dl-body">
+                                <span class="dl-title">Other downloads</span>
+                                <span class="dl-sub">Android, iOS, Win 32-bit...</span>
+                            </div>
+                            <span class="dl-cta">Open</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-media">
+                    <img alt="Promo Image" src="assets/images/engine-branding/brandpitcure.png"/>
+                </div>
+            </div>
+        </section>
+
+        <section class="feature-marquee-section">
+            <div class="shell">
+                <div class="feature-copy">
+                    <p id="featureCycleDesc">Support for custom menus and submenus with flexible UI behavior for fully scripted flows.</p>
+                </div>
+            </div>
+            <div class="feature-marquee" aria-hidden="true">
+                <div class="feature-track">
+                    <img src="assets/images/features/feature1.png" alt=""/>
+                    <img src="assets/images/features/feature2.png" alt=""/>
+                    <img src="assets/images/features/feature3.png" alt=""/>
+                    <img src="assets/images/features/feature4.png" alt=""/>
+                    <img src="assets/images/features/feature5.png" alt=""/>
+                    <img src="assets/images/features/feature6.png" alt=""/>
+                    <img src="assets/images/features/feature1.png" alt=""/>
+                    <img src="assets/images/features/feature2.png" alt=""/>
+                    <img src="assets/images/features/feature3.png" alt=""/>
+                    <img src="assets/images/features/feature4.png" alt=""/>
+                    <img src="assets/images/features/feature5.png" alt=""/>
+                    <img src="assets/images/features/feature6.png" alt=""/>
+                </div>
+            </div>
+        </section>
+
+        <section class="shell notice-wrap">
+            <article class="engine-notice">
+                <div class="notice-body">
+                    <p>This engine is not a fork of any other engine, including Psych. It was built from scratch using <a class="haxe-link" href="https://haxeflixel.com/" target="_blank" rel="noopener">HaxeFlixel</a>.</p>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer class="footer-global">
+        <div class="shell footer-shell">
+            <div class="footer-columns">
+                <div class="col">
+                    <h3>Engine</h3>
+                    <a href="downloads/">Downloads</a>
+                    <a href="wiki/index.html">Docs</a>
+                    <a href="https://github.com/ALE-Psych-Crew/ALE-Psych/blob/main/docs/lua/Home.md" target="_blank" rel="noopener">API (Lua)</a>
+                    <a href="#">Blogs</a>
+                </div>
+                <div class="col">
+                    <h3>Project</h3>
+                    <a href="mods/">Mods</a>
+                    <a href="https://discord.gg/NP4U9CUrsH" target="_blank" rel="noopener">Community</a>
+                    <a href="https://github.com/topics/ale-psych" target="_blank" rel="noopener">Git Topic</a>
+                    <a href="https://github.com/ALE-Psych-Crew/ALE-Psych-Website" target="_blank" rel="noopener">Website Source</a>
+                </div>
+                <div class="col">
+                    <h3>Social</h3>
+                    <a href="https://github.com/ALE-Psych-Crew" target="_blank" rel="noopener">GitHub</a>
+                    <a href="https://discord.gg/NP4U9CUrsH" target="_blank" rel="noopener">Discord</a>
+                    <a href="https://x.com/ale_engine" target="_blank" rel="noopener">X / Twitter</a>
+                    <a href="https://gamebanana.com/wips/95612" target="_blank" rel="noopener">GameBanana</a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>ALE Engine · Created by Alejo GD Official and THE VOID · Website by ImMalloy</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+    (function () {
+        const grid = document.getElementById('heroDownloadGrid');
+        if (grid) {
+            const cards = Array.from(grid.querySelectorAll('.downloadCard'));
+            const platform = (navigator.platform || '').toLowerCase();
+            const ua = (navigator.userAgent || '').toLowerCase();
+            let preferred = 'windows';
+            if (platform.includes('mac')) preferred = 'macos';
+            else if (ua.includes('linux')) preferred = 'linux';
+            const rank = { windows: 1, macos: 2, linux: 3, other: 4 };
+            if (rank[preferred]) rank[preferred] = 0;
+            cards
+                .sort((a, b) => (rank[a.dataset.os] ?? 9) - (rank[b.dataset.os] ?? 9))
+                .forEach((card) => grid.appendChild(card));
+        }
+
+        const features = [
+            'Support for custom menus and submenus with flexible UI behavior for fully scripted flows.',
+            'Support for unlimited characters and unlimited strumlines for large or unusual chart setups.',
+            'Extensive customization through JSON and scripts with readable, organized systems.',
+            'A completely new PlayState designed to simplify gameplay logic, effects, and customization.',
+            'Lua modules, custom classes, and improved scripting stability for Lua, HScript, or both.',
+            'Significant optimization work aimed at better performance for complete mod projects.'
+        ];
+
+        const descEl = document.getElementById('featureCycleDesc');
+        if (!descEl) return;
+
+        let index = 0;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function swapFeature() {
+            index = (index + 1) % features.length;
+            descEl.classList.add('is-fading');
+            setTimeout(() => {
+                descEl.textContent = features[index];
+                descEl.classList.remove('is-fading');
+            }, 420);
+        }
+
+        if (!reducedMotion) {
+            setInterval(swapFeature, 4200);
+        }
+    })();
+    </script>
+</body>
+</html>
+
