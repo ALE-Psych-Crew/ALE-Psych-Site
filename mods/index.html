@@ -93,11 +93,39 @@
         return typeof value === 'string' && value.trim() ? value.trim() : fallback;
       }
 
+      function isAbsoluteUrl(value) {
+        const url = asText(value);
+        if (!url) return false;
+        return /^https?:\/\//i.test(url) || /^\/\//.test(url);
+      }
+
+      function joinUrlParts(baseUrl, fileName) {
+        const base = asText(baseUrl);
+        const file = asText(fileName);
+        if (!base || !file) return '';
+        return `${base.replace(/\/+$/, '')}/${file.replace(/^\/+/, '')}`;
+      }
+
+      function resolveGameBananaMediaUrl(image, preferredFields) {
+        if (!image || typeof image !== 'object' || !Array.isArray(preferredFields)) return '';
+
+        for (const field of preferredFields) {
+          const candidate = asText(image?.[field]);
+          if (!candidate) continue;
+          if (isAbsoluteUrl(candidate)) return candidate;
+
+          const combined = joinUrlParts(image?._sBaseUrl, candidate);
+          if (combined) return combined;
+        }
+
+        return '';
+      }
+
       function imageFromRecord(record) {
         const images = record?._aPreviewMedia?._aImages;
         if (!Array.isArray(images) || images.length === 0) return '';
         const first = images[0] || {};
-        return asText(first._sFile220) || asText(first._sFile530) || asText(first._sFile) || '';
+        return resolveGameBananaMediaUrl(first, ['_sFile220', '_sFile530', '_sFile100', '_sFile']);
       }
 
       function createCard(record) {
@@ -107,13 +135,14 @@
         const creatorName = asText(creator._sName, 'Unknown Creator');
         const creatorAvatar = asText(creator._sAvatarUrl, '../assets/images/engine-branding/icon.png');
         const preview = imageFromRecord(record);
+        const cardFallbackMarkup = '<div class="mod-thumb mod-thumb-fallback">No Preview</div>';
 
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'mod-card';
         button.innerHTML = `
           <div class="mod-thumb-wrap">
-            ${preview ? `<img class="mod-thumb" src="${preview}" alt="${name} thumbnail" loading="lazy"/>` : '<div class="mod-thumb mod-thumb-fallback">No Preview</div>'}
+            ${preview ? `<img class="mod-thumb" src="${preview}" alt="${name} thumbnail" loading="lazy" onerror="this.onerror=null; this.closest('.mod-thumb-wrap').innerHTML='${cardFallbackMarkup}';"/>` : cardFallbackMarkup}
           </div>
           <div class="mod-card-body">
             <h3>${name}</h3>
@@ -163,13 +192,19 @@
 
         const fragment = document.createDocumentFragment();
         images.forEach((image) => {
-          const src = asText(image?._sFile530) || asText(image?._sFile220) || asText(image?._sFile);
+          const src = resolveGameBananaMediaUrl(image, ['_sFile530', '_sFile220', '_sFile']);
           if (!src) return;
           const img = document.createElement('img');
           img.className = 'mod-detail-image';
           img.src = src;
           img.loading = 'lazy';
           img.alt = `${asText(detailRecord?._sName, 'Mod')} media`;
+          img.addEventListener('error', () => {
+            img.remove();
+            if (!detailsMedia.querySelector('img')) {
+              detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
+            }
+          });
           fragment.appendChild(img);
         });
         if (!fragment.childNodes.length) {
