@@ -3,16 +3,220 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Redirecting to ALE Engine Mods</title>
-  <meta http-equiv="refresh" content="0;url=https://gamebanana.com/mods/cats/44037"/>
-  <link rel="canonical" href="https://gamebanana.com/mods/cats/44037"/>
-  <script>
-    window.location.replace('https://gamebanana.com/mods/cats/44037');
-  </script>
+  <title>ALE Engine - Mods</title>
+  <meta name="description" content="Browse ALE Engine mods from GameBanana without leaving the ALE Engine site."/>
+  <link href="../assets/icons/favicon-32.png?v=1" rel="icon" sizes="32x32" type="image/png"/>
+  <link rel="stylesheet" href="../css/site.css"/>
 </head>
 <body>
-  <p>Redirecting to <a href="https://gamebanana.com/mods/cats/44037">https://gamebanana.com/mods/cats/44037</a>...</p>
+  <header class="site-header" id="mainHeader">
+    <div class="shell header-shell">
+      <a aria-label="ALE Engine Home" class="brand" href="../">
+        <img alt="ALE Engine Logo" src="../assets/images/engine-branding/icon.png"/>
+        <span>ALE Engine</span>
+      </a>
+      <input aria-hidden="true" class="nav-toggle" id="navToggle" type="checkbox"/>
+      <label aria-label="Toggle navigation" class="nav-burger" for="navToggle"><span></span><span></span><span></span></label>
+      <nav class="main-nav" id="mainNav">
+        <ul class="nav-left">
+          <li><a href="../">Home</a></li>
+          <li><a href="../downloads/">Downloads</a></li>
+          <li><a aria-current="page" href="../mods/">Mods</a></li>
+          <li><a href="../community/">Community</a></li>
+          <li><a href="https://ale-psych-crew.github.io/ALEPsych-Docs/">Docs</a></li>
+          <li><a href="../blogs/">Blogs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero mods-hero">
+      <div class="hero-backdrop"></div>
+      <div class="shell mods-shell">
+        <div class="mods-heading">
+          <h1>Mods</h1>
+        </div>
+
+        <p id="modsStatus" class="mods-status" role="status" aria-live="polite">Loading mods…</p>
+        <div id="modsGrid" class="mods-grid" aria-live="polite"></div>
+
+        <section id="modDetails" class="mod-details" hidden aria-live="polite">
+          <div class="mod-details-head">
+            <div>
+              <h2 id="detailsTitle">Select a mod</h2>
+              <p id="detailsMeta" class="mod-details-meta"></p>
+            </div>
+            <a id="detailsOpenLink" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Open In GameBanana</a>
+          </div>
+          <p id="detailsDescription" class="mod-details-description"></p>
+          <div id="detailsMedia" class="mod-details-media"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-global">
+    <div class="shell footer-shell">
+      <div class="footer-columns">
+        <div class="col">
+          <h3>Navigate</h3>
+          <a href="../">Home</a><a href="../downloads/">Downloads</a><a href="../mods/">Mods</a><a href="../wiki/">Docs</a><a href="../blogs/">Blogs</a><a href="../community/">Community</a>
+        </div>
+        <div class="col">
+          <h3>Project</h3>
+          <a href="https://github.com/ALE-Psych-Crew/ALE-Psych" target="_blank" rel="noopener">Engine Source</a><a href="https://github.com/ALE-Psych-Crew/ALE-Psych-Website" target="_blank" rel="noopener">Website Source</a><a href="https://github.com/topics/ale-psych" target="_blank" rel="noopener">Git Topic</a><a href="../blogs/">Blogs</a>
+        </div>
+        <div class="col">
+          <h3>Community</h3>
+          <a href="https://github.com/ALE-Psych-Crew" target="_blank" rel="noopener">GitHub</a><a href="https://discord.gg/NP4U9CUrsH" target="_blank" rel="noopener">Discord</a><a href="https://x.com/ale_engine" target="_blank" rel="noopener">X / Twitter</a><a href="https://gamebanana.com/wips/95612" target="_blank" rel="noopener">GameBanana</a>
+        </div>
+      </div>
+      <div class="footer-bottom"><p>Site made by the ALE Engine team, with love ❤ and by Malloy.</p></div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const ALE_CATEGORY_ID = 44037;
+      const LIST_ENDPOINT = `https://gamebanana.com/apiv11/Mod/Index?_aFilters[Generic_Category]=${ALE_CATEGORY_ID}&_sSort=default&_nPage=1&_nPerpage=60`;
+      const statusEl = document.getElementById('modsStatus');
+      const gridEl = document.getElementById('modsGrid');
+      const detailsEl = document.getElementById('modDetails');
+      const detailsTitle = document.getElementById('detailsTitle');
+      const detailsMeta = document.getElementById('detailsMeta');
+      const detailsDescription = document.getElementById('detailsDescription');
+      const detailsMedia = document.getElementById('detailsMedia');
+      const detailsOpenLink = document.getElementById('detailsOpenLink');
+
+      function asText(value, fallback = '') {
+        return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+      }
+
+      function imageFromRecord(record) {
+        const images = record?._aPreviewMedia?._aImages;
+        if (!Array.isArray(images) || images.length === 0) return '';
+        const first = images[0] || {};
+        return asText(first._sFile220) || asText(first._sFile530) || asText(first._sFile) || '';
+      }
+
+      function createCard(record) {
+        const name = asText(record?._sName, 'Unnamed Mod');
+        const profileUrl = asText(record?._sProfileUrl, 'https://gamebanana.com/mods');
+        const creator = record?._aSubmitter || {};
+        const creatorName = asText(creator._sName, 'Unknown Creator');
+        const creatorAvatar = asText(creator._sAvatarUrl, '../assets/images/engine-branding/icon.png');
+        const preview = imageFromRecord(record);
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'mod-card';
+        button.innerHTML = `
+          <div class="mod-thumb-wrap">
+            ${preview ? `<img class="mod-thumb" src="${preview}" alt="${name} thumbnail" loading="lazy"/>` : '<div class="mod-thumb mod-thumb-fallback">No Preview</div>'}
+          </div>
+          <div class="mod-card-body">
+            <h3>${name}</h3>
+            <div class="mod-creator">
+              <img src="${creatorAvatar}" alt="${creatorName} profile picture" loading="lazy"/>
+              <span>${creatorName}</span>
+            </div>
+          </div>
+        `;
+        button.addEventListener('click', () => loadDetails(record?._idRow, profileUrl, creatorName));
+        return button;
+      }
+
+      function parseRichTextToPlain(text) {
+        if (!text) return '';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        return asText(doc.body.textContent || '');
+      }
+
+      function renderMedia(detailRecord) {
+        detailsMedia.innerHTML = '';
+        const images = detailRecord?._aPreviewMedia?._aImages;
+        if (!Array.isArray(images) || images.length === 0) {
+          detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        images.forEach((image) => {
+          const src = asText(image?._sFile530) || asText(image?._sFile220) || asText(image?._sFile);
+          if (!src) return;
+          const img = document.createElement('img');
+          img.className = 'mod-detail-image';
+          img.src = src;
+          img.loading = 'lazy';
+          img.alt = `${asText(detailRecord?._sName, 'Mod')} media`;
+          fragment.appendChild(img);
+        });
+        if (!fragment.childNodes.length) {
+          detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
+          return;
+        }
+        detailsMedia.appendChild(fragment);
+      }
+
+      async function loadDetails(modId, fallbackProfileUrl, fallbackCreatorName) {
+        if (!modId) return;
+        detailsEl.hidden = false;
+        detailsTitle.textContent = 'Loading details…';
+        detailsMeta.textContent = '';
+        detailsDescription.textContent = '';
+        detailsMedia.innerHTML = '';
+        detailsOpenLink.href = fallbackProfileUrl || 'https://gamebanana.com/mods';
+
+        try {
+          const response = await fetch(`https://gamebanana.com/apiv11/Mod/${modId}/ProfilePage`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const detail = await response.json();
+          const creatorName = asText(detail?._aSubmitter?._sName, fallbackCreatorName || 'Unknown Creator');
+          const modName = asText(detail?._sName, 'Unnamed Mod');
+
+          detailsTitle.textContent = modName;
+          detailsMeta.textContent = `by ${creatorName}`;
+          detailsOpenLink.href = asText(detail?._sProfileUrl, fallbackProfileUrl || 'https://gamebanana.com/mods');
+          detailsDescription.textContent = parseRichTextToPlain(detail?._sDescription) || parseRichTextToPlain(detail?._sText) || 'No description provided.';
+
+          renderMedia(detail);
+          detailsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+          detailsTitle.textContent = 'Could not load mod details';
+          detailsMeta.textContent = '';
+          detailsDescription.textContent = 'Please use the button below to view this mod on GameBanana.';
+          detailsMedia.innerHTML = '';
+        }
+      }
+
+      async function loadMods() {
+        statusEl.textContent = 'Loading mods…';
+        try {
+          const response = await fetch(LIST_ENDPOINT);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          const records = Array.isArray(data?._aRecords) ? data._aRecords : [];
+
+          gridEl.innerHTML = '';
+          if (!records.length) {
+            statusEl.textContent = 'No mods found right now.';
+            return;
+          }
+
+          const fragment = document.createDocumentFragment();
+          records.forEach((record) => fragment.appendChild(createCard(record)));
+          gridEl.appendChild(fragment);
+          statusEl.textContent = `Loaded ${records.length} mod${records.length === 1 ? '' : 's'}.`;
+        } catch (error) {
+          statusEl.textContent = 'Failed to load mods. Please try again later or open GameBanana directly.';
+          gridEl.innerHTML = '<a class="btn btn-ghost" target="_blank" rel="noopener noreferrer" href="https://gamebanana.com/mods/cats/44037">Open Category In GameBanana</a>';
+        }
+      }
+
+      loadMods();
+    })();
+  </script>
 </body>
 </html>
-
-

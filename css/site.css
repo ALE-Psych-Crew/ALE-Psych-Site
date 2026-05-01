@@ -727,6 +727,132 @@ a:hover { color: #eed6ff; }
     border-top: 1px solid rgba(206, 170, 255, 0.2);
 }
 
+/* Mods page */
+.mods-shell {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+.mods-heading h1 {
+    margin: 0.25rem 0 0.45rem;
+    font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+}
+
+.mods-status {
+    margin: 0;
+    color: var(--text-soft);
+}
+
+.mods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.8rem;
+}
+
+.mod-card {
+    cursor: pointer;
+    text-align: left;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(42, 30, 92, 0.75), rgba(23, 16, 51, 0.9));
+    border-radius: 14px;
+    overflow: hidden;
+    color: var(--text);
+    padding: 0;
+    transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mod-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(225, 193, 255, 0.6);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.36);
+}
+
+.mod-thumb-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.mod-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.mod-thumb-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-soft);
+}
+
+.mod-card-body {
+    padding: 0.72rem;
+}
+
+.mod-card-body h3 {
+    margin: 0 0 0.55rem;
+    font-size: 0.96rem;
+}
+
+.mod-creator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+}
+
+.mod-creator img {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.mod-details {
+    margin-top: 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1rem;
+    background: linear-gradient(180deg, rgba(43, 31, 90, 0.78), rgba(18, 13, 39, 0.95));
+}
+
+.mod-details-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mod-details-head h2 {
+    margin: 0;
+}
+
+.mod-details-meta,
+.mod-details-description {
+    color: var(--text-soft);
+}
+
+.mod-details-media {
+    margin-top: 0.85rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.7rem;
+}
+
+.mod-detail-image {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(222, 191, 255, 0.25);
+    background: rgba(255, 255, 255, 0.04);
+}
+
 .footer-bottom p {
     margin: 0;
     color: #bfabd8;
