@@ -134,6 +134,25 @@
         return asText(doc.body.textContent || '');
       }
 
+      function parseListingRecords(payload) {
+        if (Array.isArray(payload?._aRecords)) return payload._aRecords;
+        if (Array.isArray(payload?.records)) return payload.records;
+        if (Array.isArray(payload?.data?.records)) return payload.data.records;
+        return [];
+      }
+
+      function getPayloadShape(payload) {
+        const keys = payload && typeof payload === 'object' ? Object.keys(payload) : [];
+        return {
+          keys,
+          hasMetadata: Boolean(payload?._aMetadata),
+          hasRecordsArray: Array.isArray(payload?._aRecords),
+          hasRecordsField: Array.isArray(payload?.records),
+          hasNestedRecordsField: Array.isArray(payload?.data?.records),
+          metadataPerPage: payload?._aMetadata?._nPerpage
+        };
+      }
+
       function renderMedia(detailRecord) {
         detailsMedia.innerHTML = '';
         const images = detailRecord?._aPreviewMedia?._aImages;
@@ -196,16 +215,45 @@
         try {
           const response = await fetch(LIST_ENDPOINT);
           const data = await response.json();
-          if (!response.ok || data?._sErrorCode) {
-            console.error('GameBanana mods listing API error:', {
+
+          if (!response.ok) {
+            console.error('GameBanana mods listing HTTP error:', {
               status: response.status,
               statusText: response.statusText,
               url: LIST_ENDPOINT,
+              payloadShape: getPayloadShape(data),
               payload: data
             });
             throw new Error(`HTTP ${response.status}`);
           }
-          const records = Array.isArray(data?._aRecords) ? data._aRecords : [];
+
+          const records = parseListingRecords(data);
+          const explicitApiErrorCode = asText(data?._sErrorCode);
+          const explicitApiErrorMessage = asText(data?._sErrorMessage) || asText(data?._sErrorText);
+          const hasExplicitApiError = Boolean(explicitApiErrorCode || explicitApiErrorMessage || (Array.isArray(data?._aErrors) && data._aErrors.length));
+
+          if (hasExplicitApiError) {
+            console.error('GameBanana mods listing API error:', {
+              status: response.status,
+              statusText: response.statusText,
+              url: LIST_ENDPOINT,
+              errorCode: explicitApiErrorCode || null,
+              errorMessage: explicitApiErrorMessage || null,
+              payloadShape: getPayloadShape(data),
+              payload: data
+            });
+            throw new Error(`API ${explicitApiErrorCode || explicitApiErrorMessage || 'Unknown error'}`);
+          }
+
+          if (!records.length) {
+            console.warn('GameBanana mods listing returned no usable records:', {
+              status: response.status,
+              statusText: response.statusText,
+              url: LIST_ENDPOINT,
+              payloadShape: getPayloadShape(data),
+              payload: data
+            });
+          }
 
           gridEl.innerHTML = '';
           if (!records.length) {
