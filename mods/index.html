@@ -59,6 +59,10 @@
                 <div id="detailsInfoGrid" class="mod-details-info-grid"></div>
                 <div id="detailsTags" class="mod-details-tags" hidden></div>
               </section>
+              <section id="detailsStudioSection" class="mod-details-section" aria-label="Studio" hidden>
+                <h3>Studio</h3>
+                <div id="detailsStudio" class="mod-details-studio"></div>
+              </section>
               <section id="detailsCreditsSection" class="mod-details-section" aria-label="Credits" hidden>
                 <h3>Credits</h3>
                 <ul id="detailsCredits" class="mod-details-list"></ul>
@@ -120,6 +124,8 @@
       const detailsStats = document.getElementById('detailsStats');
       const detailsInfoGrid = document.getElementById('detailsInfoGrid');
       const detailsTags = document.getElementById('detailsTags');
+      const detailsStudioSection = document.getElementById('detailsStudioSection');
+      const detailsStudio = document.getElementById('detailsStudio');
       const detailsCreditsSection = document.getElementById('detailsCreditsSection');
       const detailsCredits = document.getElementById('detailsCredits');
       const detailsRequirementsSection = document.getElementById('detailsRequirementsSection');
@@ -189,6 +195,8 @@
         detailsInfoGrid.innerHTML = '';
         detailsTags.innerHTML = '';
         detailsTags.hidden = true;
+        detailsStudio.innerHTML = '';
+        detailsStudioSection.hidden = true;
         detailsCredits.innerHTML = '';
         detailsCreditsSection.hidden = true;
         detailsRequirements.innerHTML = '';
@@ -240,6 +248,12 @@
 
       function asText(value, fallback = '') {
         return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+      }
+
+      function normalizeUiLabel(value) {
+        const text = asText(value);
+        if (!text) return '';
+        return text.replace(/ALE\s+Engine/gi, 'ALE Psych');
       }
 
       function formatNumber(value) {
@@ -408,7 +422,62 @@
         if (!text) return '';
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
-        return asText(doc.body.textContent || '');
+        return normalizeUiLabel(asText(doc.body.textContent || ''));
+      }
+
+      function parseRichTextToFragment(text) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(asText(text), 'text/html');
+        const fragment = document.createDocumentFragment();
+        if (!doc.body) return fragment;
+        const nodes = Array.from(doc.body.childNodes);
+        nodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const normalizedText = normalizeUiLabel(node.textContent || '');
+            if (normalizedText) fragment.appendChild(document.createTextNode(normalizedText));
+            return;
+          }
+          if (!(node instanceof HTMLElement)) return;
+          if (node.tagName.toLowerCase() === 'a') {
+            const href = asText(node.getAttribute('href'));
+            if (!isAbsoluteUrl(href)) {
+              const fallback = document.createTextNode(normalizeUiLabel(node.textContent || href || ''));
+              fragment.appendChild(fallback);
+              return;
+            }
+            const anchor = document.createElement('a');
+            anchor.href = href;
+            anchor.target = '_blank';
+            anchor.rel = 'noopener noreferrer';
+            anchor.textContent = normalizeUiLabel(asText(node.textContent, href));
+            fragment.appendChild(anchor);
+            return;
+          }
+          if (node.tagName.toLowerCase() === 'img') {
+            const src = asText(node.getAttribute('src'));
+            if (!isAbsoluteUrl(src)) return;
+            const img = document.createElement('img');
+            img.className = 'mod-details-inline-image';
+            img.loading = 'lazy';
+            img.src = src;
+            img.alt = normalizeUiLabel(asText(node.getAttribute('alt'), 'Reference image'));
+            fragment.appendChild(img);
+            return;
+          }
+          const textNode = document.createTextNode(normalizeUiLabel(node.textContent || ''));
+          fragment.appendChild(textNode);
+        });
+        return fragment;
+      }
+
+      function isLikelyImageUrl(url) {
+        const value = asText(url).toLowerCase();
+        if (!value) return false;
+        return /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/.test(value);
+      }
+
+      function toNormalizedText(value) {
+        return normalizeUiLabel(asText(value));
       }
 
       function parseListingRecords(payload) {
@@ -446,6 +515,76 @@
           .filter(Boolean);
       }
 
+      function collectStudios(detail) {
+        const buckets = [];
+        const maybeStudio = detail?._aStudio || detail?._aProfileStudio || detail?._aProducer || detail?._aOrganization;
+        if (maybeStudio) buckets.push(maybeStudio);
+        if (Array.isArray(detail?._aStudios)) buckets.push(...detail._aStudios);
+        if (Array.isArray(detail?._aProfileStudios)) buckets.push(...detail._aProfileStudios);
+
+        const mapped = buckets
+          .map((studio) => {
+            const name = toNormalizedText(firstNonEmpty(studio?._sName, studio?.name, studio?._sTitle, studio?._sDisplayName));
+            const url = asText(firstNonEmpty(studio?._sProfileUrl, studio?._sUrl, studio?.url, studio?._sLink));
+            const image = asText(firstNonEmpty(
+              studio?._sBannerUrl,
+              studio?._sLogoUrl,
+              studio?._sImageUrl,
+              studio?._sAvatarUrl,
+              studio?._sIconUrl,
+              studio?._sFile,
+              studio?._sImgUrl
+            ));
+            if (!name && !url && !image) return null;
+            return { name, url, image };
+          })
+          .filter(Boolean);
+
+        const seen = new Set();
+        return mapped.filter((studio) => {
+          const key = `${studio.name}|${studio.url}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
+      function collectCreditEntries(source) {
+        if (!Array.isArray(source)) return [];
+        const credits = [];
+
+        source.forEach((entry) => {
+          if (typeof entry === 'string') {
+            credits.push({ group: '', name: toNormalizedText(entry), role: '', url: '', image: '' });
+            return;
+          }
+
+          if (Array.isArray(entry?._aAuthors)) {
+            const groupName = toNormalizedText(firstNonEmpty(entry?._sName, entry?.name, entry?._sTitle, entry?.label));
+            entry._aAuthors.forEach((author) => {
+              credits.push({
+                group: groupName,
+                name: toNormalizedText(firstNonEmpty(author?._sName, author?.name, author?._sTitle, author?.label)),
+                role: toNormalizedText(firstNonEmpty(author?._sRole, author?._sText, author?._sTask, author?.role)),
+                url: asText(firstNonEmpty(author?._sProfileUrl, author?._sUrl, author?.url, author?._sLink)),
+                image: asText(firstNonEmpty(author?._sAvatarUrl, author?._sImageUrl, author?._sIconUrl))
+              });
+            });
+            return;
+          }
+
+          credits.push({
+            group: toNormalizedText(firstNonEmpty(entry?._sGroupName, entry?._sCreditGroup, entry?.group)),
+            name: toNormalizedText(firstNonEmpty(entry?._sName, entry?.name, entry?._sTitle, entry?.label, entry?._sText)),
+            role: toNormalizedText(firstNonEmpty(entry?._sRole, entry?.role, entry?._sTask, entry?._sDescription)),
+            url: asText(firstNonEmpty(entry?._sProfileUrl, entry?._sUrl, entry?.url, entry?._sLink)),
+            image: asText(firstNonEmpty(entry?._sAvatarUrl, entry?._sImageUrl, entry?._sIconUrl))
+          });
+        });
+
+        return credits.filter((credit) => credit.name || credit.role || credit.url || credit.image);
+      }
+
       function setListSection(listEl, sectionEl, items) {
         listEl.innerHTML = '';
         if (!Array.isArray(items) || !items.length) {
@@ -474,11 +613,38 @@
           key.textContent = item.label;
           const value = document.createElement('span');
           value.className = 'mod-details-v';
-          value.textContent = item.value;
+          if (item.type === 'submitter') {
+            value.appendChild(createSubmitterCard(item));
+          } else {
+            value.textContent = normalizeUiLabel(item.value);
+          }
           row.append(key, value);
           fragment.appendChild(row);
         });
         detailsInfoGrid.appendChild(fragment);
+      }
+
+      function createSubmitterCard(item) {
+        const wrapper = document.createElement('span');
+        wrapper.className = 'mod-details-submitter';
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = asText(item.avatar, '../assets/images/engine-branding/icon.png');
+        img.alt = `${normalizeUiLabel(asText(item.value, 'Submitter'))} profile picture`;
+        img.addEventListener('error', () => {
+          img.src = '../assets/images/engine-branding/icon.png';
+        }, { once: true });
+        wrapper.appendChild(img);
+
+        const nameNode = item.url && isAbsoluteUrl(item.url) ? document.createElement('a') : document.createElement('span');
+        if (nameNode.tagName.toLowerCase() === 'a') {
+          nameNode.href = item.url;
+          nameNode.target = '_blank';
+          nameNode.rel = 'noopener noreferrer';
+        }
+        nameNode.textContent = normalizeUiLabel(asText(item.value, 'Unknown Creator'));
+        wrapper.appendChild(nameNode);
+        return wrapper;
       }
 
       function renderStatsChips(stats) {
@@ -488,7 +654,7 @@
           if (!stat?.value) return;
           const chip = document.createElement('div');
           chip.className = 'mod-details-stat';
-          chip.innerHTML = `<span>${stat.label}</span><strong>${stat.value}</strong>`;
+          chip.innerHTML = `<span>${stat.icon} ${stat.label}</span><strong>${stat.value}</strong>`;
           fragment.appendChild(chip);
         });
         detailsStats.appendChild(fragment);
@@ -505,22 +671,114 @@
         tags.forEach((tag) => {
           const chip = document.createElement('span');
           chip.className = 'mod-details-tag';
-          chip.textContent = tag;
+          chip.textContent = normalizeUiLabel(tag);
           fragment.appendChild(chip);
         });
         detailsTags.appendChild(fragment);
         detailsTags.hidden = false;
       }
 
+      function setStudioSection(studios) {
+        detailsStudio.innerHTML = '';
+        if (!Array.isArray(studios) || !studios.length) {
+          detailsStudioSection.hidden = true;
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        studios.forEach((studio) => {
+          const card = document.createElement('article');
+          card.className = 'mod-details-studio-card';
+
+          if (studio.image && isAbsoluteUrl(studio.image) && isLikelyImageUrl(studio.image)) {
+            const img = document.createElement('img');
+            img.className = 'mod-details-studio-image';
+            img.loading = 'lazy';
+            img.src = studio.image;
+            img.alt = `${toNormalizedText(studio.name || 'Studio')} image`;
+            card.appendChild(img);
+          }
+
+          const nameEl = studio.url && isAbsoluteUrl(studio.url) ? document.createElement('a') : document.createElement('p');
+          nameEl.className = 'mod-details-studio-name';
+          if (nameEl.tagName.toLowerCase() === 'a') {
+            nameEl.href = studio.url;
+            nameEl.target = '_blank';
+            nameEl.rel = 'noopener noreferrer';
+          }
+          nameEl.textContent = toNormalizedText(studio.name || 'Studio');
+          card.appendChild(nameEl);
+
+          if (studio.image && isAbsoluteUrl(studio.image) && !isLikelyImageUrl(studio.image)) {
+            const imageLink = document.createElement('a');
+            imageLink.href = studio.image;
+            imageLink.target = '_blank';
+            imageLink.rel = 'noopener noreferrer';
+            imageLink.textContent = 'Open studio media';
+            card.appendChild(imageLink);
+          }
+
+          fragment.appendChild(card);
+        });
+
+        detailsStudio.appendChild(fragment);
+        detailsStudioSection.hidden = false;
+      }
+
+      function setCreditsSection(source) {
+        detailsCredits.innerHTML = '';
+        const entries = collectCreditEntries(source);
+        if (!entries.length) {
+          const fallbackItems = collectListItems(source);
+          setListSection(detailsCredits, detailsCreditsSection, fallbackItems.map((item) => normalizeUiLabel(item)));
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        entries.forEach((entry) => {
+          const li = document.createElement('li');
+          li.className = 'mod-details-credit-item';
+
+          if (entry.image && isAbsoluteUrl(entry.image) && isLikelyImageUrl(entry.image)) {
+            const img = document.createElement('img');
+            img.className = 'mod-details-credit-avatar';
+            img.loading = 'lazy';
+            img.src = entry.image;
+            img.alt = `${toNormalizedText(entry.name || 'Credit')} avatar`;
+            li.appendChild(img);
+          }
+
+          const block = document.createElement('div');
+          block.className = 'mod-details-credit-copy';
+          const nameEl = entry.url && isAbsoluteUrl(entry.url) ? document.createElement('a') : document.createElement('strong');
+          if (nameEl.tagName.toLowerCase() === 'a') {
+            nameEl.href = entry.url;
+            nameEl.target = '_blank';
+            nameEl.rel = 'noopener noreferrer';
+          }
+          nameEl.textContent = entry.name || 'Contributor';
+          block.appendChild(nameEl);
+
+          const metaParts = [entry.group, entry.role].filter(Boolean);
+          if (metaParts.length) {
+            const meta = document.createElement('small');
+            meta.textContent = metaParts.join(' · ');
+            block.appendChild(meta);
+          }
+
+          li.appendChild(block);
+          fragment.appendChild(li);
+        });
+
+        detailsCredits.appendChild(fragment);
+        detailsCreditsSection.hidden = false;
+      }
+
       function renderDetails(detail, fallbackProfileUrl, fallbackCreatorName) {
         const creatorName = asText(detail?._aSubmitter?._sName, fallbackCreatorName || 'Unknown Creator');
         const modName = asText(detail?._sName, 'Unnamed Mod');
         const submitterRole = firstNonEmpty(detail?._aSubmitter?._sTitle, detail?._aSubmitter?._sRank, detail?._aSubmitter?._sRole);
-        const gameName = firstNonEmpty(detail?._aGame?._sName, detail?._aGame?._sSingularTitle, detail?._aGame?._sModelName);
-        const categoryName = firstNonEmpty(detail?._aCategory?._sName, detail?._aGameCategory?._sName, detail?._aCategory?._sModelName);
         const version = firstNonEmpty(detail?._sVersion, detail?._aVersion?._sVersion, detail?._aLatestVersion?._sVersion);
-        const releaseType = firstNonEmpty(detail?._sInitialVisibility, detail?._sState, detail?._sStatus);
-        const visibility = firstNonEmpty(detail?._sVisibility, detail?._sInitialVisibility);
         const submitDate = formatDate(firstNonEmpty(detail?._tsDateAdded, detail?._sDateAdded, detail?._sSubmissionDate));
         const updateDate = formatDate(firstNonEmpty(detail?._tsDateModified, detail?._sDateModified, detail?._sLastUpdateDate));
         const likes = formatNumber(firstFinite(detail?._nLikeCount, detail?._nLikes, detail?._aStats?._nLikeCount));
@@ -528,40 +786,42 @@
         const posts = formatNumber(firstFinite(detail?._nPostCount, detail?._aStats?._nPostCount, detail?._nComments));
         const subscribers = formatNumber(firstFinite(detail?._nSubscriberCount, detail?._nSubscribeCount));
 
-        detailsTitle.textContent = modName;
-        detailsMeta.textContent = submitterRole ? `by ${creatorName} · ${submitterRole}` : `by ${creatorName}`;
+        const submitterAvatar = asText(detail?._aSubmitter?._sAvatarUrl, '../assets/images/engine-branding/icon.png');
+        const submitterUrl = asText(firstNonEmpty(detail?._aSubmitter?._sProfileUrl, detail?._aSubmitter?._sUrl));
+        const studios = collectStudios(detail);
+
+        detailsTitle.textContent = normalizeUiLabel(modName);
+        detailsMeta.textContent = submitterRole ? `by ${normalizeUiLabel(creatorName)} · ${normalizeUiLabel(submitterRole)}` : `by ${normalizeUiLabel(creatorName)}`;
         detailsOpenLink.href = asText(detail?._sProfileUrl, fallbackProfileUrl || 'https://gamebanana.com/mods');
-        detailsDescription.textContent = parseRichTextToPlain(detail?._sDescription) || parseRichTextToPlain(detail?._sText) || 'No description provided.';
+        detailsDescription.replaceChildren();
+        const richDescription = parseRichTextToFragment(detail?._sDescription || detail?._sText);
+        if (richDescription.childNodes.length) {
+          detailsDescription.appendChild(richDescription);
+        } else {
+          detailsDescription.textContent = 'No description provided.';
+        }
 
         renderStatsChips([
-          { label: 'Likes', value: likes },
-          { label: 'Views', value: views },
-          { label: 'Posts', value: posts },
-          { label: 'Subscribers', value: subscribers }
+          { label: 'Likes', value: likes, icon: '❤' },
+          { label: 'Views', value: views, icon: '👁' },
+          { label: 'Posts', value: posts, icon: '💬' },
+          { label: 'Subscribers', value: subscribers, icon: '🔔' }
         ]);
 
         renderKeyValueGrid([
           { label: 'Version', value: version },
-          { label: 'Game', value: gameName },
-          { label: 'Category', value: categoryName },
+          { label: 'Submitter', value: creatorName, type: 'submitter', avatar: submitterAvatar, url: submitterUrl },
           { label: 'Submitted', value: submitDate },
-          { label: 'Updated', value: updateDate },
-          { label: 'Visibility', value: visibility },
-          { label: 'State', value: releaseType },
-          { label: 'Submitter', value: creatorName },
-          { label: 'Submitter ID', value: formatNumber(firstFinite(detail?._aSubmitter?._idRow, detail?._idSubmitterRow)) }
+          { label: 'Updated', value: updateDate }
         ]);
 
         renderTags(detail);
-        setListSection(
-          detailsCredits,
-          detailsCreditsSection,
-          collectListItems(detail?._aCredits || detail?._aCreditGroups || detail?._aProfileCredits)
-        );
+        setStudioSection(studios);
+        setCreditsSection(detail?._aCredits || detail?._aCreditGroups || detail?._aProfileCredits);
         setListSection(
           detailsRequirements,
           detailsRequirementsSection,
-          collectListItems(detail?._aRequirements || detail?._aProfileRequirements || detail?._aRequirementGroups)
+          collectListItems(detail?._aRequirements || detail?._aProfileRequirements || detail?._aRequirementGroups).map((item) => normalizeUiLabel(item))
         );
 
         renderMedia(detail);
@@ -622,6 +882,8 @@
         detailsInfoGrid.innerHTML = '';
         detailsTags.innerHTML = '';
         detailsTags.hidden = true;
+        detailsStudio.innerHTML = '';
+        detailsStudioSection.hidden = true;
         detailsCredits.innerHTML = '';
         detailsCreditsSection.hidden = true;
         detailsRequirements.innerHTML = '';
