@@ -807,13 +807,16 @@ a:hover { color: #eed6ff; }
     width: 100%;
     aspect-ratio: 16 / 9;
     background: rgba(255, 255, 255, 0.04);
+    overflow: hidden;
 }
 
 .mod-thumb {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
+    transform: scale(1.03);
 }
 
 .mod-thumb-fallback {
