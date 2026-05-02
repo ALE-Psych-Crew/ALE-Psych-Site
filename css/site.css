@@ -936,6 +936,14 @@ a:hover { color: #eed6ff; }
     min-width: min(100%, 420px);
 }
 
+.mod-details-head-side {
+    display: grid;
+    gap: 0.45rem;
+    justify-items: end;
+    flex: 1 1 190px;
+    min-width: 160px;
+}
+
 .mod-details-head-actions .btn {
     min-height: 48px;
     padding-inline: 1.15rem;
@@ -951,7 +959,7 @@ a:hover { color: #eed6ff; }
     gap: 0.16rem;
     min-width: 160px;
     max-width: 100%;
-    flex: 1 1 220px;
+    width: min(100%, 240px);
 }
 
 .mod-details-head-submitter-label {
@@ -1149,8 +1157,8 @@ a:hover { color: #eed6ff; }
 
 .mod-details-studio-image {
     width: 100%;
-    max-width: min(280px, 100%);
-    max-height: 140px;
+    max-width: min(200px, 100%);
+    max-height: 108px;
     border-radius: 6px;
     border: 0;
     object-fit: contain;
@@ -1352,18 +1360,24 @@ a:hover { color: #eed6ff; }
         width: 100%;
     }
 
+    .mod-details-head-side {
+        width: 100%;
+        justify-items: start;
+    }
+
     .mod-details-head-submitter {
         width: 100%;
-        flex-basis: 100%;
+        flex-basis: auto;
         min-width: 0;
     }
 
     .mod-details-close {
-        margin-left: auto;
+        margin-left: 0;
     }
 
     .mod-details-studio-image {
-        max-width: min(240px, 100%);
+        max-width: min(172px, 100%);
+        max-height: 96px;
     }
 }
 
