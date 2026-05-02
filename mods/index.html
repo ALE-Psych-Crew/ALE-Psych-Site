@@ -93,6 +93,7 @@
       const detailsMedia = document.getElementById('detailsMedia');
       const detailsOpenLink = document.getElementById('detailsOpenLink');
       const detailsCloseButton = document.getElementById('detailsCloseButton');
+      const MIN_VISIBLE_CARD_SLOTS = 8;
       let lastActiveCard = null;
 
       function openDetailsPanel() {
@@ -199,6 +200,30 @@
         return button;
       }
 
+      function createPlaceholderCard() {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'mod-card mod-card-placeholder';
+        placeholder.setAttribute('aria-hidden', 'true');
+        placeholder.innerHTML = `
+          <div class="mod-thumb-wrap mod-thumb-skeleton"></div>
+          <div class="mod-card-body mod-card-body-skeleton">
+            <span class="skeleton-line skeleton-line-title"></span>
+            <span class="skeleton-line skeleton-line-meta"></span>
+          </div>
+        `;
+        return placeholder;
+      }
+
+      function renderPlaceholders(slotCount) {
+        const safeSlotCount = Number.isFinite(slotCount) ? Math.max(0, Math.floor(slotCount)) : 0;
+        if (!safeSlotCount) return;
+        const fragment = document.createDocumentFragment();
+        for (let index = 0; index < safeSlotCount; index += 1) {
+          fragment.appendChild(createPlaceholderCard());
+        }
+        gridEl.appendChild(fragment);
+      }
+
       function parseRichTextToPlain(text) {
         if (!text) return '';
         const parser = new DOMParser();
@@ -295,6 +320,8 @@
 
       async function loadMods() {
         statusEl.textContent = 'Loading mods…';
+        gridEl.innerHTML = '';
+        renderPlaceholders(MIN_VISIBLE_CARD_SLOTS);
         try {
           const response = await fetch(LIST_ENDPOINT);
           const data = await response.json();
@@ -341,12 +368,14 @@
           gridEl.innerHTML = '';
           if (!records.length) {
             statusEl.textContent = 'No mods found right now.';
+            renderPlaceholders(MIN_VISIBLE_CARD_SLOTS);
             return;
           }
 
           const fragment = document.createDocumentFragment();
           records.forEach((record) => fragment.appendChild(createCard(record)));
           gridEl.appendChild(fragment);
+          renderPlaceholders(Math.max(0, MIN_VISIBLE_CARD_SLOTS - records.length));
           statusEl.textContent = `Loaded ${records.length} mod${records.length === 1 ? '' : 's'}.`;
         } catch (error) {
           console.error('Failed to load mods listing:', error);

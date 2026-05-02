@@ -749,12 +749,14 @@ a:hover { color: #eed6ff; }
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 0.8rem;
+    align-content: start;
 }
 
 .mods-grid-area {
     position: relative;
     isolation: isolate;
     padding-top: 0.35rem;
+    min-height: clamp(560px, 70vh, 840px);
 }
 
 .mod-card {
@@ -823,8 +825,11 @@ a:hover { color: #eed6ff; }
 .mod-details {
     position: absolute;
     top: 0;
-    left: 0;
+    left: auto;
     right: 0;
+    width: min(460px, 44vw);
+    max-height: min(78vh, 900px);
+    overflow: auto;
     z-index: 9;
     border: 1px solid var(--line);
     border-radius: 16px;
@@ -869,13 +874,15 @@ a:hover { color: #eed6ff; }
 }
 
 .mod-details-close {
-    width: 2rem;
-    height: 2rem;
+    width: 2.35rem;
+    height: 2.35rem;
+    flex: 0 0 auto;
     border-radius: 999px;
-    border: 1px solid rgba(233, 207, 255, 0.46);
-    background: rgba(255, 255, 255, 0.08);
-    color: #f9edff;
-    font-size: 1.25rem;
+    border: 1px solid rgba(243, 224, 255, 0.68);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 1.55rem;
+    font-weight: 800;
     line-height: 1;
     display: inline-flex;
     align-items: center;
@@ -886,8 +893,8 @@ a:hover { color: #eed6ff; }
 
 .mod-details-close:hover,
 .mod-details-close:focus-visible {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.84);
     transform: translateY(-1px);
 }
 
@@ -920,6 +927,54 @@ a:hover { color: #eed6ff; }
     background: rgba(255, 255, 255, 0.04);
 }
 
+.mod-card-placeholder {
+    pointer-events: none;
+    user-select: none;
+    border-style: dashed;
+    border-color: rgba(206, 170, 255, 0.18);
+    background: linear-gradient(180deg, rgba(35, 24, 74, 0.55), rgba(19, 13, 42, 0.75));
+}
+
+.mod-thumb-skeleton,
+.skeleton-line {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mod-thumb-skeleton::after,
+.skeleton-line::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+    animation: modsSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
+.mod-card-body-skeleton {
+    display: grid;
+    gap: 0.52rem;
+}
+
+.skeleton-line {
+    display: block;
+    height: 0.78rem;
+    border-radius: 999px;
+}
+
+.skeleton-line-title {
+    width: 88%;
+}
+
+.skeleton-line-meta {
+    width: 56%;
+}
+
+@keyframes modsSkeletonShimmer {
+    100% { transform: translateX(100%); }
+}
+
 .footer-bottom p {
     margin: 0;
     color: #bfabd8;
@@ -943,7 +998,14 @@ a:hover { color: #eed6ff; }
 
     .mod-details {
         position: relative;
+        width: 100%;
+        max-height: none;
+        overflow: visible;
         margin-bottom: 0.75rem;
+    }
+
+    .mods-grid-area {
+        min-height: clamp(420px, 58vh, 700px);
     }
 }
 
