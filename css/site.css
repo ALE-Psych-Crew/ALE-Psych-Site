@@ -759,6 +759,32 @@ a:hover { color: #eed6ff; }
     min-height: clamp(560px, 70vh, 840px);
 }
 
+.mods-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.mods-pagination .btn {
+    min-width: 96px;
+}
+
+.mods-pagination .btn:disabled {
+    opacity: 0.52;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.mods-page-indicator {
+    margin: 0;
+    min-width: 96px;
+    text-align: center;
+    color: var(--text-soft);
+}
+
 .mod-card {
     cursor: pointer;
     text-align: left;

@@ -39,7 +39,7 @@
         </div>
 
         <p id="modsStatus" class="mods-status" role="status" aria-live="polite">Loading mods…</p>
-        <div class="mods-grid-area">
+        <div class="mods-grid-area" id="modsGridArea">
           <section id="modDetails" class="mod-details" hidden aria-hidden="true" aria-live="polite" role="region" aria-labelledby="detailsTitle">
             <div class="mod-details-head">
               <div>
@@ -56,6 +56,11 @@
           </section>
           <div id="modsGrid" class="mods-grid" aria-live="polite"></div>
         </div>
+        <nav class="mods-pagination" aria-label="Mods pages">
+          <button id="modsPrevButton" type="button" class="btn btn-ghost">Prev</button>
+          <p id="modsPageIndicator" class="mods-page-indicator" aria-live="polite">Page 1</p>
+          <button id="modsNextButton" type="button" class="btn btn-ghost">Next</button>
+        </nav>
       </div>
     </section>
   </main>
@@ -83,9 +88,11 @@
   <script>
     (function () {
       const ALE_CATEGORY_ID = 44037;
-      const LIST_ENDPOINT = `https://gamebanana.com/apiv11/Mod/Index?_aFilters[Generic_Category]=${ALE_CATEGORY_ID}&_nPage=1&_nPerpage=50`;
+      const LIST_ENDPOINT_BASE = 'https://gamebanana.com/apiv11/Mod/Index';
+      const LIST_PER_PAGE = 50;
       const statusEl = document.getElementById('modsStatus');
       const gridEl = document.getElementById('modsGrid');
+      const gridAreaEl = document.getElementById('modsGridArea');
       const detailsEl = document.getElementById('modDetails');
       const detailsTitle = document.getElementById('detailsTitle');
       const detailsMeta = document.getElementById('detailsMeta');
@@ -93,8 +100,71 @@
       const detailsMedia = document.getElementById('detailsMedia');
       const detailsOpenLink = document.getElementById('detailsOpenLink');
       const detailsCloseButton = document.getElementById('detailsCloseButton');
+      const prevButton = document.getElementById('modsPrevButton');
+      const nextButton = document.getElementById('modsNextButton');
+      const pageIndicator = document.getElementById('modsPageIndicator');
       const TARGET_CARD_SLOTS = 30;
       let lastActiveCard = null;
+      let currentPage = 1;
+      let hasNextPage = false;
+
+      function buildListEndpoint(page) {
+        const safePage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+        return `${LIST_ENDPOINT_BASE}?_aFilters[Generic_Category]=${ALE_CATEGORY_ID}&_nPage=${safePage}&_nPerpage=${LIST_PER_PAGE}`;
+      }
+
+      function toFiniteNumber(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function parseMetadata(payload) {
+        const metadata = payload?._aMetadata && typeof payload._aMetadata === 'object' ? payload._aMetadata : {};
+        const recordCount = toFiniteNumber(metadata?._nRecordCount ?? payload?._nRecordCount ?? payload?.recordCount);
+        const isCompleteRaw = metadata?._bIsComplete ?? payload?._bIsComplete;
+        const isComplete =
+          typeof isCompleteRaw === 'boolean'
+            ? isCompleteRaw
+            : typeof isCompleteRaw === 'string'
+              ? isCompleteRaw.toLowerCase() === 'true' || isCompleteRaw === '1'
+              : isCompleteRaw === 1;
+
+        return { recordCount, isComplete };
+      }
+
+      function determineHasNextPage(payload, records, page) {
+        const recordCountOnPage = Array.isArray(records) ? records.length : 0;
+        const { recordCount, isComplete } = parseMetadata(payload);
+
+        if (recordCount !== null) {
+          return (page * LIST_PER_PAGE) < recordCount;
+        }
+
+        if (isComplete === true) return false;
+        if (recordCountOnPage < LIST_PER_PAGE) return false;
+        if (isComplete === false) return true;
+        return recordCountOnPage === LIST_PER_PAGE;
+      }
+
+      function updatePaginationUi() {
+        pageIndicator.textContent = `Page ${currentPage}`;
+        prevButton.disabled = currentPage <= 1;
+        nextButton.disabled = !hasNextPage;
+      }
+
+      function resetDetailsState() {
+        closeDetailsPanel();
+        detailsTitle.textContent = 'Select a mod';
+        detailsMeta.textContent = '';
+        detailsDescription.textContent = '';
+        detailsMedia.innerHTML = '';
+        detailsOpenLink.href = 'https://gamebanana.com/mods';
+      }
+
+      function scrollToGridArea() {
+        if (!gridAreaEl) return;
+        gridAreaEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
 
       function openDetailsPanel() {
         if (!detailsEl.hidden && detailsEl.classList.contains('is-open')) return;
@@ -357,19 +427,22 @@
         closeDetailsPanel({ returnFocus: true });
       });
 
-      async function loadMods() {
+      async function loadMods(page = 1) {
+        const targetPage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+        const listEndpoint = buildListEndpoint(targetPage);
         statusEl.textContent = 'Loading mods…';
+        updatePaginationUi();
         gridEl.innerHTML = '';
         renderPlaceholders(TARGET_CARD_SLOTS);
         try {
-          const response = await fetch(LIST_ENDPOINT);
+          const response = await fetch(listEndpoint);
           const data = await response.json();
 
           if (!response.ok) {
             console.error('GameBanana mods listing HTTP error:', {
               status: response.status,
               statusText: response.statusText,
-              url: LIST_ENDPOINT,
+              url: listEndpoint,
               payloadShape: getPayloadShape(data),
               payload: data
             });
@@ -385,7 +458,7 @@
             console.error('GameBanana mods listing API error:', {
               status: response.status,
               statusText: response.statusText,
-              url: LIST_ENDPOINT,
+              url: listEndpoint,
               errorCode: explicitApiErrorCode || null,
               errorMessage: explicitApiErrorMessage || null,
               payloadShape: getPayloadShape(data),
@@ -398,15 +471,19 @@
             console.warn('GameBanana mods listing returned no usable records:', {
               status: response.status,
               statusText: response.statusText,
-              url: LIST_ENDPOINT,
+              url: listEndpoint,
               payloadShape: getPayloadShape(data),
               payload: data
             });
           }
 
+          currentPage = targetPage;
+          hasNextPage = determineHasNextPage(data, records, currentPage);
+          updatePaginationUi();
+
           gridEl.innerHTML = '';
           if (!records.length) {
-            statusEl.textContent = 'No mods found right now.';
+            statusEl.textContent = currentPage === 1 ? 'No mods found right now.' : 'No mods were found on this page.';
             renderPlaceholders(TARGET_CARD_SLOTS);
             return;
           }
@@ -418,10 +495,30 @@
           statusEl.textContent = '';
         } catch (error) {
           console.error('Failed to load mods listing:', error);
-          statusEl.textContent = 'Failed to load mods. Please try again later or open GameBanana directly.';
+          statusEl.textContent = 'Could not load mods right now. Please try again in a moment, or open GameBanana directly.';
+          hasNextPage = false;
+          updatePaginationUi();
           gridEl.innerHTML = '<a class="btn btn-ghost" target="_blank" rel="noopener noreferrer" href="https://gamebanana.com/mods/cats/44037">Open Category In GameBanana</a>';
         }
       }
+
+      function goToPage(page) {
+        const targetPage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+        if (targetPage === currentPage) return;
+        resetDetailsState();
+        loadMods(targetPage);
+        scrollToGridArea();
+      }
+
+      prevButton.addEventListener('click', () => {
+        if (currentPage <= 1) return;
+        goToPage(currentPage - 1);
+      });
+
+      nextButton.addEventListener('click', () => {
+        if (!hasNextPage) return;
+        goToPage(currentPage + 1);
+      });
 
       loadMods();
     })();
