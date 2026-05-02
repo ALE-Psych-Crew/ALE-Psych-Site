@@ -94,6 +94,7 @@
                 <section id="detailsCreditsSection" class="mod-details-section" aria-label="Credits" hidden>
                   <h3>Credits</h3>
                   <ul id="detailsCredits" class="mod-details-list"></ul>
+                  <p id="detailsVersion" class="mod-details-version" hidden></p>
                 </section>
               </aside>
             </div>
@@ -143,6 +144,7 @@
       const detailsStudio = document.getElementById('detailsStudio');
       const detailsCreditsSection = document.getElementById('detailsCreditsSection');
       const detailsCredits = document.getElementById('detailsCredits');
+      const detailsVersion = document.getElementById('detailsVersion');
       const detailsRequirementsSection = document.getElementById('detailsRequirementsSection');
       const detailsRequirements = document.getElementById('detailsRequirements');
       const detailsOpenLink = document.getElementById('detailsOpenLink');
@@ -216,6 +218,8 @@
         detailsStudioSection.hidden = true;
         detailsCredits.innerHTML = '';
         detailsCreditsSection.hidden = true;
+        detailsVersion.textContent = '';
+        detailsVersion.hidden = true;
         detailsRequirements.innerHTML = '';
         detailsRequirementsSection.hidden = true;
         detailsOpenLink.href = 'https://gamebanana.com/mods';
@@ -727,17 +731,47 @@
         detailsStudioSection.hidden = false;
       }
 
-      function setCreditsSection(source) {
+      function setCreditsSection(source, versionText) {
         detailsCredits.innerHTML = '';
+        detailsCredits.classList.remove('is-scrollable');
         const entries = collectCreditEntries(source);
+        const normalizedVersion = asText(versionText);
+
+        function renderVersion() {
+          if (!normalizedVersion) {
+            detailsVersion.textContent = '';
+            detailsVersion.hidden = true;
+            return;
+          }
+          detailsVersion.textContent = `Version ${normalizeUiLabel(normalizedVersion)}`;
+          detailsVersion.hidden = false;
+        }
+
         if (!entries.length) {
           const fallbackItems = collectListItems(source);
           setListSection(detailsCredits, detailsCreditsSection, fallbackItems.map((item) => normalizeUiLabel(item)));
+          renderVersion();
+          if (!detailsCreditsSection.hidden || normalizedVersion) {
+            detailsCreditsSection.hidden = false;
+          }
           return;
         }
 
-        const fragment = document.createDocumentFragment();
+        const groupedEntries = new Map();
         entries.forEach((entry) => {
+          const groupName = asText(entry.group, 'Contributors');
+          if (!groupedEntries.has(groupName)) {
+            groupedEntries.set(groupName, []);
+          }
+          groupedEntries.get(groupName).push(entry);
+        });
+
+        const shouldUseCollapsibleGroups = entries.length > 12 || groupedEntries.size > 3;
+        detailsCredits.classList.toggle('is-scrollable', entries.length > 10);
+
+        const fragment = document.createDocumentFragment();
+
+        const createCreditItem = (entry) => {
           const li = document.createElement('li');
           li.className = 'mod-details-credit-item';
 
@@ -769,11 +803,157 @@
           }
 
           li.appendChild(block);
-          fragment.appendChild(li);
-        });
+          return li;
+        };
+
+        if (shouldUseCollapsibleGroups) {
+          let groupIndex = 0;
+          groupedEntries.forEach((groupItems, groupName) => {
+            const wrapper = document.createElement('li');
+            wrapper.className = 'mod-details-credit-group-wrap';
+
+            const details = document.createElement('details');
+            details.className = 'mod-details-credit-group';
+            if (groupIndex < 2) {
+              details.open = true;
+            }
+
+            const summary = document.createElement('summary');
+            summary.textContent = `${normalizeUiLabel(groupName)} (${groupItems.length})`;
+            details.appendChild(summary);
+
+            const nestedList = document.createElement('ul');
+            nestedList.className = 'mod-details-credit-group-list';
+            groupItems.forEach((item) => {
+              nestedList.appendChild(createCreditItem(item));
+            });
+
+            details.appendChild(nestedList);
+            wrapper.appendChild(details);
+            fragment.appendChild(wrapper);
+            groupIndex += 1;
+          });
+        } else {
+          entries.forEach((entry) => {
+            fragment.appendChild(createCreditItem(entry));
+          });
+        }
 
         detailsCredits.appendChild(fragment);
+        renderVersion();
         detailsCreditsSection.hidden = false;
+      }
+
+      function renderMedia(detailRecord) {
+        detailsMedia.innerHTML = '';
+        const images = detailRecord?._aPreviewMedia?._aImages;
+        if (!Array.isArray(images) || images.length === 0) {
+          detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
+          return;
+        }
+
+        const mediaSources = images
+          .map((image) => resolveGameBananaMediaUrl(image, ['_sFile530', '_sFile220', '_sFile']))
+          .filter(Boolean);
+
+        if (!mediaSources.length) {
+          detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
+          return;
+        }
+
+        const visibleThumbs = 5;
+        let activeIndex = 0;
+        let thumbStart = 0;
+
+        const gallery = document.createElement('div');
+        gallery.className = 'mod-details-gallery';
+
+        const primaryWrap = document.createElement('div');
+        primaryWrap.className = 'mod-details-gallery-primary';
+        const primaryImage = document.createElement('img');
+        primaryImage.className = 'mod-detail-image mod-detail-image-primary';
+        primaryImage.loading = 'lazy';
+        primaryImage.alt = `${asText(detailRecord?._sName, 'Mod')} media`;
+        primaryWrap.appendChild(primaryImage);
+
+        const thumbsRow = document.createElement('div');
+        thumbsRow.className = 'mod-details-gallery-thumbs';
+        const prevThumbs = document.createElement('button');
+        prevThumbs.type = 'button';
+        prevThumbs.className = 'mod-details-gallery-arrow';
+        prevThumbs.setAttribute('aria-label', 'Show previous thumbnails');
+        prevThumbs.textContent = '‹';
+        const nextThumbs = document.createElement('button');
+        nextThumbs.type = 'button';
+        nextThumbs.className = 'mod-details-gallery-arrow';
+        nextThumbs.setAttribute('aria-label', 'Show next thumbnails');
+        nextThumbs.textContent = '›';
+        const thumbsStrip = document.createElement('div');
+        thumbsStrip.className = 'mod-details-gallery-strip';
+
+        const thumbButtons = mediaSources.map((src, index) => {
+          const thumbButton = document.createElement('button');
+          thumbButton.type = 'button';
+          thumbButton.className = 'mod-details-gallery-thumb';
+          thumbButton.setAttribute('aria-label', `Show media image ${index + 1}`);
+          const thumbImage = document.createElement('img');
+          thumbImage.src = src;
+          thumbImage.loading = 'lazy';
+          thumbImage.alt = `${asText(detailRecord?._sName, 'Mod')} thumbnail ${index + 1}`;
+          thumbButton.appendChild(thumbImage);
+          thumbButton.addEventListener('click', () => {
+            activeIndex = index;
+            syncGalleryState();
+          });
+          return thumbButton;
+        });
+
+        function syncGalleryState() {
+          if (!mediaSources.length) return;
+          thumbStart = Math.max(0, Math.min(thumbStart, Math.max(0, mediaSources.length - visibleThumbs)));
+          primaryImage.src = mediaSources[activeIndex];
+
+          thumbButtons.forEach((button, index) => {
+            const isVisible = index >= thumbStart && index < thumbStart + visibleThumbs;
+            button.hidden = !isVisible;
+            button.classList.toggle('is-active', index === activeIndex);
+            button.setAttribute('aria-current', index === activeIndex ? 'true' : 'false');
+          });
+
+          prevThumbs.hidden = mediaSources.length <= visibleThumbs;
+          nextThumbs.hidden = mediaSources.length <= visibleThumbs;
+          prevThumbs.disabled = thumbStart <= 0;
+          nextThumbs.disabled = thumbStart + visibleThumbs >= mediaSources.length;
+        }
+
+        prevThumbs.addEventListener('click', () => {
+          thumbStart = Math.max(0, thumbStart - visibleThumbs);
+          syncGalleryState();
+        });
+
+        nextThumbs.addEventListener('click', () => {
+          thumbStart = Math.min(Math.max(0, mediaSources.length - visibleThumbs), thumbStart + visibleThumbs);
+          syncGalleryState();
+        });
+
+        thumbButtons.forEach((button) => thumbsStrip.appendChild(button));
+        thumbsRow.append(prevThumbs, thumbsStrip, nextThumbs);
+        gallery.append(primaryWrap, thumbsRow);
+        detailsMedia.appendChild(gallery);
+        syncGalleryState();
+
+        primaryImage.addEventListener('error', () => {
+          mediaSources.splice(activeIndex, 1);
+          thumbButtons.splice(activeIndex, 1);
+          if (!mediaSources.length) {
+            detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
+            return;
+          }
+          activeIndex = Math.max(0, Math.min(activeIndex, mediaSources.length - 1));
+          thumbsStrip.innerHTML = '';
+          thumbButtons.forEach((button) => thumbsStrip.appendChild(button));
+          syncGalleryState();
+        });
       }
 
       function renderDetails(detail, fallbackProfileUrl, fallbackCreatorName) {
@@ -824,14 +1004,14 @@
         ]);
 
         renderKeyValueGrid([
-          { label: 'Version', value: version },
           { label: 'Submitted', value: submitDate },
           { label: 'Updated', value: updateDate }
         ]);
 
         renderTags(detail);
         setStudioSection(studios);
-        setCreditsSection(detail?._aCredits || detail?._aCreditGroups || detail?._aProfileCredits);
+        const versionLabel = version ? (version.toLowerCase().startsWith('v') ? version : `v${version}`) : '';
+        setCreditsSection(detail?._aCredits || detail?._aCreditGroups || detail?._aProfileCredits, versionLabel);
         setListSection(
           detailsRequirements,
           detailsRequirementsSection,
@@ -853,38 +1033,6 @@
         };
       }
 
-      function renderMedia(detailRecord) {
-        detailsMedia.innerHTML = '';
-        const images = detailRecord?._aPreviewMedia?._aImages;
-        if (!Array.isArray(images) || images.length === 0) {
-          detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
-          return;
-        }
-
-        const fragment = document.createDocumentFragment();
-        images.forEach((image) => {
-          const src = resolveGameBananaMediaUrl(image, ['_sFile530', '_sFile220', '_sFile']);
-          if (!src) return;
-          const img = document.createElement('img');
-          img.className = 'mod-detail-image';
-          img.src = src;
-          img.loading = 'lazy';
-          img.alt = `${asText(detailRecord?._sName, 'Mod')} media`;
-          img.addEventListener('error', () => {
-            img.remove();
-            if (!detailsMedia.querySelector('img')) {
-              detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
-            }
-          });
-          fragment.appendChild(img);
-        });
-        if (!fragment.childNodes.length) {
-          detailsMedia.innerHTML = '<p class="mods-status">No media preview available for this mod.</p>';
-          return;
-        }
-        detailsMedia.appendChild(fragment);
-      }
-
       async function loadDetails(modId, fallbackProfileUrl, fallbackCreatorName) {
         if (!modId) return;
         openDetailsPanel();
@@ -900,6 +1048,8 @@
         detailsStudioSection.hidden = true;
         detailsCredits.innerHTML = '';
         detailsCreditsSection.hidden = true;
+        detailsVersion.textContent = '';
+        detailsVersion.hidden = true;
         detailsRequirements.innerHTML = '';
         detailsRequirementsSection.hidden = true;
         detailsOpenLink.href = fallbackProfileUrl || 'https://gamebanana.com/mods';
@@ -920,6 +1070,8 @@
           detailsTags.hidden = true;
           detailsCredits.innerHTML = '';
           detailsCreditsSection.hidden = true;
+          detailsVersion.textContent = '';
+          detailsVersion.hidden = true;
           detailsRequirements.innerHTML = '';
           detailsRequirementsSection.hidden = true;
         }
