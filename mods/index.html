@@ -878,7 +878,17 @@
             img.loading = 'lazy';
             img.src = studio.image;
             img.alt = `${toNormalizedText(studio.name || 'Studio')} image`;
-            card.appendChild(img);
+
+            if (studio.url && isAbsoluteUrl(studio.url)) {
+              const imageLink = document.createElement('a');
+              imageLink.href = studio.url;
+              imageLink.target = '_blank';
+              imageLink.rel = 'noopener noreferrer';
+              imageLink.appendChild(img);
+              card.appendChild(imageLink);
+            } else {
+              card.appendChild(img);
+            }
           }
 
           const hasRenderableImage = studio.image && isAbsoluteUrl(studio.image) && isLikelyImageUrl(studio.image);
