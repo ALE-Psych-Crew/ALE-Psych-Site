@@ -404,13 +404,23 @@ a:hover { color: #eed6ff; }
 }
 
 .download-grid-page {
-    margin-top: 0.6rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0.6rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+.download-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.download-stack > .release-tabs {
+    margin-top: 0;
 }
 
 .altCard {
-    background: linear-gradient(180deg, #3f2e7e 0%, #271b53 100%);
-}
+      background: linear-gradient(180deg, #3f2e7e 0%, #271b53 100%);
+  }
 
 .release-tabs {
     margin-top: 0.4rem;
