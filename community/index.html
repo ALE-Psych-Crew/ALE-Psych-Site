@@ -1,16 +1,152 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Redirecting to ALE Psych</title>
-  <meta http-equiv="refresh" content="0;url=../"/>
-  <link rel="canonical" href="../"/>
-  <script>
-    window.location.replace('../');
-  </script>
+  <title>ALE Psych - Community</title>
+  <meta name="description" content="ALE Psych Community page."/>
+  <link href="../assets/icons/favicon-32.png?v=1" rel="icon" sizes="32x32" type="image/png"/>
+  <link rel="stylesheet" href="../css/site.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <p>Redirecting to <a href="../">../</a>...</p>
+  <header class="site-header" id="mainHeader">
+    <div class="shell header-shell">
+      <a aria-label="ALE Psych Home" class="brand" href="../">
+        <img alt="ALE Psych Logo" src="../assets/images/engine-branding/icon.png"/>
+        <span>ALE Psych</span>
+      </a>
+      <input aria-hidden="true" autocomplete="off" class="nav-toggle" id="navToggle" type="checkbox"/>
+      <label aria-label="Toggle navigation" class="nav-burger" for="navToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </label>
+      <nav class="main-nav" id="mainNav">
+        <ul class="nav-left">
+          <li><a href="../">Home</a></li>
+          <li><a href="../downloads/">Downloads</a></li>
+          <li><a href="../mods/">Mods</a></li>
+          <li><a aria-current="page" href="../community/">Community</a></li>
+          <li><a href="https://ale-psych-crew.github.io/ALEPsych-Docs/">Docs</a></li>
+          <li><a href="https://ale-psych-crew.github.io/ALEPsych-Blogs/">Blogs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero community-v2">
+      <div class="hero-backdrop"></div>
+      <div class="shell community-v2-shell">
+        <section class="community-v2-head">
+          <h1>Community</h1>
+        </section>
+
+        <section class="community-v2-main">
+          <a class="community-v2-discord" href="https://discord.gg/NP4U9CUrsH" target="_blank" rel="noopener noreferrer">
+            <img src="../assets/images/community/discord-chat.png" alt="ALE Psych Discord preview"/>
+            <div class="community-v2-discord-body">
+              <h2><i class="inline-icon" data-lucide="messages-square"></i>Discord</h2>
+              <p>Main community hub for support, announcements, and discussion.</p>
+              <span>Join Server</span>
+            </div>
+          </a>
+
+          <div class="community-v2-side">
+            <a class="community-v2-side-card" href="https://x.com/ale_engine" target="_blank" rel="noopener noreferrer">
+              <img src="../assets/images/community/twitter-profile.png" alt="Twitter profile preview"/>
+              <div class="community-v2-side-copy">
+                <h3><i class="inline-icon" data-lucide="at-sign"></i>Twitter/X</h3>
+              </div>
+            </a>
+            <a class="community-v2-side-card" href="https://www.youtube.com/@ale_psych" target="_blank" rel="noopener noreferrer">
+              <img src="../assets/images/community/youtube-channel.png" alt="YouTube channel preview"/>
+              <div class="community-v2-side-copy">
+                <h3><i class="inline-icon" data-lucide="play"></i>YouTube</h3>
+              </div>
+            </a>
+            <a class="community-v2-side-card" href="https://ale-psych-crew.github.io/ALEPsych-Blogs/">
+              <img src="../assets/images/community/blogs-page.png" alt="Blogs page preview"/>
+              <div class="community-v2-side-copy">
+                <h3><i class="inline-icon" data-lucide="newspaper"></i>Blog</h3>
+              </div>
+            </a>
+          </div>
+        </section>
+
+        <section class="community-v2-tools">
+          <h2>Tools and Documentation</h2>
+          <div class="community-v2-tools-grid">
+            <a class="community-v2-tool-card" href="https://github.com/topics/ale-psych" target="_blank" rel="noopener noreferrer">
+              <img src="../assets/images/community/github-topic.png" alt="GitHub topic preview"/>
+              <div>
+                <h3><i class="inline-icon" data-lucide="hash"></i>GitHub Topic</h3>
+                <p>Repositories, tools, and ALE Psych ecosystem projects.</p>
+              </div>
+            </a>
+            <a class="community-v2-tool-card" href="https://ale-psych-crew.github.io/ALEPsych-Docs/">
+              <img src="../assets/images/community/blogs-page.png" alt="Docs preview"/>
+              <div>
+                <h3><i class="inline-icon" data-lucide="book-open-text"></i>Docs</h3>
+                <p>Reference guides and technical documentation.</p>
+              </div>
+            </a>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-global">
+    <div class="shell footer-shell">
+      <div class="footer-columns">
+        <div class="col">
+          <h3>Navigate</h3>
+          <a href="../">Home</a>
+          <a href="../downloads/">Downloads</a>
+          <a href="../mods/">Mods</a>
+          <a href="https://ale-psych-crew.github.io/ALEPsych-Docs/">Docs</a>
+          <a href="https://ale-psych-crew.github.io/ALEPsych-Blogs/">Blogs</a>
+          <a href="../community/">Community</a>
+        </div>
+        <div class="col">
+          <h3>Project</h3>
+          <a href="https://github.com/ALE-Psych-Crew/ALE-Psych" target="_blank" rel="noopener">Engine Source</a>
+          <a href="https://github.com/ALE-Psych-Crew/ALE-Psych-Website" target="_blank" rel="noopener">Website Source</a>
+          <a href="https://github.com/topics/ale-psych" target="_blank" rel="noopener">Git Topic</a>
+          <a href="https://ale-psych-crew.github.io/ALEPsych-Blogs/">Blogs</a>
+        </div>
+        <div class="col">
+          <h3>Community</h3>
+          <a href="https://github.com/ALE-Psych-Crew" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://discord.gg/NP4U9CUrsH" target="_blank" rel="noopener">Discord</a>
+          <a href="https://x.com/ale_engine" target="_blank" rel="noopener">X / Twitter</a>
+          <a href="https://gamebanana.com/wips/95612" target="_blank" rel="noopener">GameBanana</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>Site made by the ALE Psych team, with love ❤ and by Malloy.</p>
+      </div>
+    </div>
+  </footer>
+  <script>
+    function resetNavToggleState() {
+      const navToggle = document.getElementById('navToggle');
+      if (navToggle) navToggle.checked = false;
+    }
+
+    window.addEventListener('pageshow', resetNavToggleState);
+    window.addEventListener('load', resetNavToggleState);
+    resetNavToggleState();
+    window.setTimeout(resetNavToggleState, 0);
+
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  </script>
 </body>
 </html>
+
+
