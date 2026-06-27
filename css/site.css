@@ -111,6 +111,9 @@ a:hover { color: #eed6ff; }
     position: relative;
     padding: 3.4rem 0 2.4rem;
     overflow: clip;
+    background:
+        linear-gradient(180deg, rgba(13, 8, 32, 0.72), rgba(13, 8, 32, 0.22)),
+        url('../assets/images/engine-branding/brandpitcure.png') center/cover no-repeat;
 }
 
 .hero-backdrop {
@@ -130,9 +133,55 @@ a:hover { color: #eed6ff; }
     align-items: center;
 }
 
+.hero-copy {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-copy-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.hero-brand-showcase {
+    margin-bottom: 1rem;
+    padding: 1rem 1.1rem 0.95rem;
+    border-radius: 24px;
+    border: 1px solid rgba(220, 188, 255, 0.28);
+    background: rgba(15, 10, 31, 0.44);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+}
+
+.hero-brand {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.35rem 0.75rem;
+    color: var(--text);
+    text-align: center;
+}
+
+.hero-brand img {
+    width: min(20vw, 138px);
+    height: min(20vw, 138px);
+    min-width: 96px;
+    min-height: 96px;
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.35));
+}
+
+.hero-brand span {
+    font-size: clamp(1.8rem, 4vw, 3.45rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+}
+
 .hero-copy h1 {
     margin: 0 0 0.75rem;
-    font-size: clamp(1.9rem, 2.8vw, 3rem);
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
     line-height: 1.08;
 }
 
