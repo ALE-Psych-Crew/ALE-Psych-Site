@@ -654,6 +654,21 @@ a:hover { color: #eed6ff; }
     white-space: nowrap;
 }
 
+.page-hero {
+    padding: clamp(2.8rem, 6vw, 5rem) 0 clamp(2.5rem, 5vw, 4rem);
+}
+
+.page-hero-shell {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.page-hero-card {
+    width: min(760px, 100%);
+}
+
 .inline-icon {
     width: 0.95em;
     height: 0.95em;
@@ -1528,6 +1543,14 @@ a:hover { color: #eed6ff; }
     .mod-details-studio-image {
         max-width: min(172px, 100%);
         max-height: 96px;
+    }
+
+    .blogs-hero {
+        padding-top: 2rem;
+    }
+
+    .community-v2-discord-body h2 {
+        white-space: normal;
     }
 }
 

@@ -15,6 +15,12 @@
         <img alt="ALE Psych Logo" src="../assets/images/engine-branding/icon.png"/>
         <span>ALE Psych</span>
       </a>
+      <input aria-hidden="true" autocomplete="off" class="nav-toggle" id="navToggle" type="checkbox"/>
+      <label aria-label="Toggle navigation" class="nav-burger" for="navToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </label>
       <nav class="main-nav" id="mainNav">
         <ul class="nav-left">
           <li><a href="../">Home</a></li>
@@ -29,12 +35,12 @@
   </header>
 
   <main>
-    <section class="hero" style="padding:5rem 0 4rem; min-height: calc(100vh - 220px);">
+    <section class="hero page-hero blogs-hero">
       <div class="hero-backdrop"></div>
-      <div class="shell" style="position:relative; display:flex; align-items:center; justify-content:center;">
-        <article class="engine-notice" style="max-width:760px; width:100%;">
+      <div class="shell page-hero-shell">
+        <article class="engine-notice page-hero-card">
           <div class="notice-body">
-            <p style="font-size:1.15rem; text-align:center;">Work in progress.</p>
+            <p>Work in progress.</p>
           </div>
         </article>
       </div>
@@ -74,6 +80,17 @@
       </div>
     </div>
   </footer>
+  <script>
+    function resetNavToggleState() {
+      const navToggle = document.getElementById('navToggle');
+      if (navToggle) navToggle.checked = false;
+    }
+
+    window.addEventListener('pageshow', resetNavToggleState);
+    window.addEventListener('load', resetNavToggleState);
+    resetNavToggleState();
+    window.setTimeout(resetNavToggleState, 0);
+  </script>
 </body>
 </html>
 

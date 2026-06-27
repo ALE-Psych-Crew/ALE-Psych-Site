@@ -16,7 +16,7 @@
         <img alt="ALE Psych Logo" src="../assets/images/engine-branding/icon.png"/>
         <span>ALE Psych</span>
       </a>
-      <input aria-hidden="true" class="nav-toggle" id="navToggle" type="checkbox"/>
+      <input aria-hidden="true" autocomplete="off" class="nav-toggle" id="navToggle" type="checkbox"/>
       <label aria-label="Toggle navigation" class="nav-burger" for="navToggle">
         <span></span>
         <span></span>
@@ -242,6 +242,16 @@
     </div>
   </footer>
   <script>
+    function resetNavToggleState() {
+      const navToggle = document.getElementById('navToggle');
+      if (navToggle) navToggle.checked = false;
+    }
+
+    window.addEventListener('pageshow', resetNavToggleState);
+    window.addEventListener('load', resetNavToggleState);
+    resetNavToggleState();
+    window.setTimeout(resetNavToggleState, 0);
+
     if (window.lucide) {
       window.lucide.createIcons();
     }
